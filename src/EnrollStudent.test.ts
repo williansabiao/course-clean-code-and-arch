@@ -96,8 +96,8 @@ test('Should generate enrollment code', function () {
     module: '1',
     class: 'A',
   })
-  expect(enrollStudent.execute(enrollmentRequest)[0].enrollmentCode).toEqual('2021EM1A0001')
-  expect(enrollStudent.execute(enrollmentRequest2)[1].enrollmentCode).toEqual('2021EM1A0002')
+  expect(enrollStudent.execute(enrollmentRequest)[0].code).toEqual('2021EM1A0001')
+  expect(enrollStudent.execute(enrollmentRequest2)[1].code).toEqual('2021EM1A0002')
 })
 
 test('Should not enroll student below minimum age', function () {
