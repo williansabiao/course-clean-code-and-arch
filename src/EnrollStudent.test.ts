@@ -1,4 +1,18 @@
+import ClassRepositoryMemory from './ClassRepositoryMemory'
+import EnrollmentRepositoryMemory from './EnrollmentRepositoryMemory'
 import EnrollStudent, { enrollmentRequestType } from './EnrollStudent'
+import LevelRepositoryMemory from './LevelRepositoryMemory'
+import ModuleRepositoryMemory from './ModuleRepositoryMemory'
+
+let enrollStudent: EnrollStudent
+
+beforeEach(() => {
+  const enrollmentRepository = new EnrollmentRepositoryMemory()
+  const levelRepository = new LevelRepositoryMemory()
+  const moduleRepository = new ModuleRepositoryMemory()
+  const classRepository = new ClassRepositoryMemory()
+  enrollStudent = new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
+})
 
 type enrollmentRequestSutType = {
   student: enrollmentRequestType['student']
@@ -16,7 +30,6 @@ const makeSut = ({ student, level = 'EM', module = '1', clazz = 'A' }: enrollmen
 })
 
 test('should not enroll without valid student name', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Ana',
@@ -28,7 +41,6 @@ test('should not enroll without valid student name', function () {
 })
 
 test('should not enroll without valid student cpf', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Ana Silva',
@@ -40,7 +52,6 @@ test('should not enroll without valid student cpf', function () {
 })
 
 test('Should not enroll duplicated student', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Ana Silva',
@@ -55,7 +66,6 @@ test('Should not enroll duplicated student', function () {
 })
 
 test('Should enroll 2 student and return them', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest1 = makeSut({
     student: {
       name: 'Ana Silva',
@@ -71,11 +81,10 @@ test('Should enroll 2 student and return them', function () {
     },
   })
   enrollStudent.execute(enrollmentRequest1)
-  expect(enrollStudent.execute(enrollmentRequest2)).toHaveLength(2)
+  expect(enrollStudent.execute(enrollmentRequest2)).toBeTruthy()
 })
 
 test('Should generate enrollment code', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Maria Carolina Fonseca',
@@ -96,12 +105,11 @@ test('Should generate enrollment code', function () {
     module: '1',
     class: 'A',
   })
-  expect(enrollStudent.execute(enrollmentRequest)[0].code).toEqual('2021EM1A0001')
-  expect(enrollStudent.execute(enrollmentRequest2)[1].code).toEqual('2021EM1A0002')
+  expect(enrollStudent.execute(enrollmentRequest).code).toEqual('2021EM1A0001')
+  expect(enrollStudent.execute(enrollmentRequest2).code).toEqual('2021EM1A0002')
 })
 
 test('Should not enroll student below minimum age', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Maria Carolina Fonseca',
@@ -116,7 +124,6 @@ test('Should not enroll student below minimum age', function () {
 })
 
 test('Should not enroll student over class capacity', function () {
-  const enrollStudent = new EnrollStudent()
   const enrollmentRequest = makeSut({
     student: {
       name: 'Maria Carolina Fonseca',
