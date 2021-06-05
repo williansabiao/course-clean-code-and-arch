@@ -36,6 +36,10 @@ export default class EnrollStudent {
     this.moduleRepository = moduleRepository
   }
 
+  convertMsToDay(timeInMs: number) {
+    return timeInMs / 1000 / 60 / 60 / 24
+  }
+
   execute(enrollmentRequest: enrollmentRequestType): any {
     const student = new Student(
       enrollmentRequest.student.name,
@@ -45,6 +49,9 @@ export default class EnrollStudent {
     const level = this.levelRepository.findByCode(enrollmentRequest.level)
     const module = this.moduleRepository.findByCode(enrollmentRequest.level, enrollmentRequest.module)
     const clazz = this.classRepository.findByCode(enrollmentRequest.class)
+
+    if (this.classRepository.isClassFinished(clazz.code)) throw new Error('Class is already finished')
+    if (this.classRepository.isClassAlreadyStarted(clazz.code)) throw new Error('Class is already started')
 
     if (student.getAge() <= module.minimumAge) throw new Error('Student below minimum age')
     const studentsEnrolledInClass = this.enrollmentRepository.findAllByClass(

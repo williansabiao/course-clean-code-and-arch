@@ -22,7 +22,15 @@ type enrollmentRequestSutType = {
   class?: enrollmentRequestType['class']
 }
 
-const makeSut = ({ student, level = 'EM', module = '1', clazz = 'A' }: enrollmentRequestSutType) => ({
+const makeSut = (classes: any[]) => {
+  const enrollmentRepository = new EnrollmentRepositoryMemory()
+  const levelRepository = new LevelRepositoryMemory()
+  const moduleRepository = new ModuleRepositoryMemory()
+  const classRepository = new ClassRepositoryMemory(classes)
+  return new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
+}
+
+const makeStudentSut = ({ student, level = 'EM', module = '1', clazz = 'A' }: enrollmentRequestSutType) => ({
   student,
   level,
   module,
@@ -30,7 +38,7 @@ const makeSut = ({ student, level = 'EM', module = '1', clazz = 'A' }: enrollmen
 })
 
 test('should not enroll without valid student name', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Ana',
       cpf: '',
@@ -41,7 +49,7 @@ test('should not enroll without valid student name', function () {
 })
 
 test('should not enroll without valid student cpf', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Ana Silva',
       cpf: '123.456.789-99',
@@ -52,7 +60,7 @@ test('should not enroll without valid student cpf', function () {
 })
 
 test('Should not enroll duplicated student', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Ana Silva',
       cpf: '832.081.519-34',
@@ -66,14 +74,14 @@ test('Should not enroll duplicated student', function () {
 })
 
 test('Should enroll 2 student and return them', function () {
-  const enrollmentRequest1 = makeSut({
+  const enrollmentRequest1 = makeStudentSut({
     student: {
       name: 'Ana Silva',
       cpf: '832.081.519-34',
       birthDate: '2002-03-01',
     },
   })
-  const enrollmentRequest2 = makeSut({
+  const enrollmentRequest2 = makeStudentSut({
     student: {
       name: 'Joseph Silva',
       cpf: '537.891.090-02',
@@ -85,7 +93,7 @@ test('Should enroll 2 student and return them', function () {
 })
 
 test('Should generate enrollment code', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Maria Carolina Fonseca',
       cpf: '755.525.774-26',
@@ -93,9 +101,9 @@ test('Should generate enrollment code', function () {
     },
     level: 'EM',
     module: '1',
-    class: 'A',
+    clazz: 'A',
   })
-  const enrollmentRequest2 = makeSut({
+  const enrollmentRequest2 = makeStudentSut({
     student: {
       name: 'Joseph Silva',
       cpf: '537.891.090-02',
@@ -103,14 +111,14 @@ test('Should generate enrollment code', function () {
     },
     level: 'EM',
     module: '1',
-    class: 'A',
+    clazz: 'A',
   })
   expect(enrollStudent.execute(enrollmentRequest).code).toEqual('2021EM1A0001')
   expect(enrollStudent.execute(enrollmentRequest2).code).toEqual('2021EM1A0002')
 })
 
 test('Should not enroll student below minimum age', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Maria Carolina Fonseca',
       cpf: '755.525.774-26',
@@ -118,13 +126,13 @@ test('Should not enroll student below minimum age', function () {
     },
     level: 'EM',
     module: '1',
-    class: 'A',
+    clazz: 'A',
   })
   expect(() => enrollStudent.execute(enrollmentRequest)).toThrowError('Student below minimum age')
 })
 
 test('Should not enroll student over class capacity', function () {
-  const enrollmentRequest = makeSut({
+  const enrollmentRequest = makeStudentSut({
     student: {
       name: 'Maria Carolina Fonseca',
       cpf: '755.525.774-26',
@@ -132,7 +140,7 @@ test('Should not enroll student over class capacity', function () {
     },
     level: 'EM',
     module: '3',
-    class: 'A',
+    clazz: 'A',
   })
   const enrollmentRequest2 = {
     ...enrollmentRequest,
@@ -160,3 +168,87 @@ test('Should not enroll student over class capacity', function () {
   enrollStudent.execute(enrollmentRequest3)
   expect(() => enrollStudent.execute(enrollmentRequest4)).toThrowError('Class is over capacity')
 })
+
+test('Should not enroll after the end of the class', function () {
+  const enrollStudentSut = makeSut([
+    {
+      level: 'EM',
+      module: '3',
+      code: 'A',
+      capacity: 5,
+      start_date: '2020-06-01',
+      end_date: '2020-12-15',
+    },
+  ])
+  const enrollmentRequest = makeStudentSut({
+    student: {
+      name: 'Maria Carolina Fonseca',
+      cpf: '755.525.774-26',
+      birthDate: '2002-03-12',
+    },
+    level: 'EM',
+    module: '3',
+    clazz: 'A',
+  })
+  expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already finished')
+})
+
+test('Should not enroll after 25% of the start of the class', function () {
+  const start_date = new Date()
+  const end_date = new Date()
+  start_date.setDate(start_date.getDate() - 25)
+  end_date.setDate(end_date.getDate() + 75)
+
+  const enrollStudentSut = makeSut([
+    {
+      level: 'EM',
+      module: '1',
+      code: 'C',
+      capacity: 5,
+      start_date: start_date.toISOString().substring(0, 10),
+      end_date: end_date.toISOString().substring(0, 10),
+    },
+  ])
+
+  const enrollmentRequest = makeStudentSut({
+    student: {
+      name: 'Maria Carolina Fonseca',
+      cpf: '755.525.774-26',
+      birthDate: '2002-03-12',
+    },
+    level: 'EM',
+    module: '1',
+    clazz: 'C',
+  })
+  expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already started')
+})
+
+// test.only('Should generate the invoices based on the number of installments, rounding each amount and applying the rest in the last invoice', function () {
+//   const start_date = new Date()
+//   const end_date = new Date()
+//   start_date.setDate(start_date.getDate() - 25)
+//   end_date.setDate(end_date.getDate() + 75)
+
+//   const enrollStudentSut = makeSut([
+//     {
+//       level: 'EM',
+//       module: '1',
+//       code: 'C',
+//       capacity: 5,
+//       start_date: start_date.toISOString().substring(0, 10),
+//       end_date: end_date.toISOString().substring(0, 10),
+//     },
+//   ])
+
+//   const enrollmentRequest = makeStudentSut({
+//     student: {
+//       name: 'Maria Carolina Fonseca',
+//       cpf: '755.525.774-26',
+//       birthDate: '2002-03-12',
+//     },
+//     level: 'EM',
+//     module: '1',
+//     clazz: 'C',
+//   })
+//   expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already started')
+// })
