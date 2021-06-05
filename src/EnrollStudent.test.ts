@@ -20,6 +20,7 @@ type enrollmentRequestSutType = {
   level?: enrollmentRequestType['level']
   module?: enrollmentRequestType['module']
   class?: enrollmentRequestType['class']
+  installments?: enrollmentRequestType['installments']
 }
 
 const makeSut = (classes: any[]) => {
@@ -30,11 +31,18 @@ const makeSut = (classes: any[]) => {
   return new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
 }
 
-const makeStudentSut = ({ student, level = 'EM', module = '1', clazz = 'A' }: enrollmentRequestSutType) => ({
+const makeStudentSut = ({
+  student,
+  level = 'EM',
+  module = '1',
+  clazz = 'A',
+  installments = 1,
+}: enrollmentRequestSutType) => ({
   student,
   level,
   module,
   class: clazz,
+  installments,
 })
 
 test('should not enroll without valid student name', function () {
@@ -223,32 +231,25 @@ test('Should not enroll after 25% of the start of the class', function () {
   expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already started')
 })
 
-// test.only('Should generate the invoices based on the number of installments, rounding each amount and applying the rest in the last invoice', function () {
-//   const start_date = new Date()
-//   const end_date = new Date()
-//   start_date.setDate(start_date.getDate() - 25)
-//   end_date.setDate(end_date.getDate() + 75)
+test('Should generate the invoices based on the number of installments, rounding each amount and applying the rest in the last invoice', function () {
+  const enrollmentRequest = makeStudentSut({
+    student: {
+      name: 'Maria Carolina Fonseca',
+      cpf: '755.525.774-26',
+      birthDate: '2002-03-12',
+    },
+    level: 'EM',
+    module: '1',
+    clazz: 'A',
+    installments: 3,
+  })
+  const price = 17000
+  const priceByMonth = parseFloat((price / 3).toFixed(2))
+  const priceLastMonth = price - priceByMonth * 2
 
-//   const enrollStudentSut = makeSut([
-//     {
-//       level: 'EM',
-//       module: '1',
-//       code: 'C',
-//       capacity: 5,
-//       start_date: start_date.toISOString().substring(0, 10),
-//       end_date: end_date.toISOString().substring(0, 10),
-//     },
-//   ])
-
-//   const enrollmentRequest = makeStudentSut({
-//     student: {
-//       name: 'Maria Carolina Fonseca',
-//       cpf: '755.525.774-26',
-//       birthDate: '2002-03-12',
-//     },
-//     level: 'EM',
-//     module: '1',
-//     clazz: 'C',
-//   })
-//   expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already started')
-// })
+  expect(enrollStudent.execute(enrollmentRequest).invoices).toMatchObject([
+    { value: priceByMonth },
+    { value: priceByMonth },
+    { value: priceLastMonth },
+  ])
+})

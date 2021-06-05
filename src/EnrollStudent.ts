@@ -3,6 +3,7 @@ import Enrollment from './Enrollment'
 import EnrollmentRepository from './EnrollRepository'
 import LevelRepository from './LevelRepository'
 import ModuleRepository from './ModuleRepository'
+import Invoices from './Invoices'
 import Student from './Student/Student'
 
 type studentType = {
@@ -16,6 +17,7 @@ export type enrollmentRequestType = {
   level: string
   module: string
   class: string
+  installments: number
 }
 
 export default class EnrollStudent {
@@ -68,7 +70,8 @@ export default class EnrollStudent {
     const code = `${new Date().getFullYear()}${enrollmentRequest.level}${enrollmentRequest.module}${
       enrollmentRequest.class
     }${sequence}`
-    const enrollment = new Enrollment(student, level.code, module.code, clazz.code, code)
+    const invoices = new Invoices(module.price, enrollmentRequest.installments)
+    const enrollment = new Enrollment(student, level.code, module.code, clazz.code, code, invoices.generate())
     this.enrollmentRepository.save(enrollment)
     return enrollment
   }
