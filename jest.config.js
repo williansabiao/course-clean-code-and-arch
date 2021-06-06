@@ -1,3 +1,4 @@
+const ignores = ['/node_modules/', '__mocks__', 'src/@types', 'vendors'];
 export default {
   "roots": [
     "<rootDir>/src"
@@ -9,5 +10,6 @@ export default {
   "transform": {
     "^.+\\.(ts|tsx)$": "ts-jest"
   },
-  transformIgnorePatterns: ['/node_modules/']
+  "collectCoverageFrom": ['src/**/*.+(js|jsx|ts|tsx)'],
+  transformIgnorePatterns: [...ignores]
 }
