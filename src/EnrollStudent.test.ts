@@ -1,4 +1,4 @@
-import ClassRepositoryMemory from './ClassRepositoryMemory'
+import ClassRoomRepositoryMemory from './ClassRoomRepositoryMemory'
 import EnrollmentRepositoryMemory from './EnrollmentRepositoryMemory'
 import EnrollStudent, { enrollmentRequestType } from './EnrollStudent'
 import LevelRepositoryMemory from './LevelRepositoryMemory'
@@ -10,13 +10,13 @@ beforeEach(() => {
   const enrollmentRepository = new EnrollmentRepositoryMemory()
   const levelRepository = new LevelRepositoryMemory()
   const moduleRepository = new ModuleRepositoryMemory()
-  const classRepository = new ClassRepositoryMemory()
+  const classRepository = new ClassRoomRepositoryMemory()
   enrollStudent = new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
 })
 
 type enrollmentRequestSutType = {
   student: enrollmentRequestType['student']
-  clazz?: enrollmentRequestType['class']
+  classRoom?: enrollmentRequestType['class']
   level?: enrollmentRequestType['level']
   module?: enrollmentRequestType['module']
   class?: enrollmentRequestType['class']
@@ -27,7 +27,7 @@ const makeSut = (classes: any[]) => {
   const enrollmentRepository = new EnrollmentRepositoryMemory()
   const levelRepository = new LevelRepositoryMemory()
   const moduleRepository = new ModuleRepositoryMemory()
-  const classRepository = new ClassRepositoryMemory(classes)
+  const classRepository = new ClassRoomRepositoryMemory(classes)
   return new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
 }
 
@@ -35,13 +35,13 @@ const makeStudentSut = ({
   student,
   level = 'EM',
   module = '1',
-  clazz = 'A',
+  classRoom: classRoom = 'A',
   installments = 1,
 }: enrollmentRequestSutType) => ({
   student,
   level,
   module,
-  class: clazz,
+  class: classRoom,
   installments,
 })
 
@@ -109,7 +109,7 @@ test('Should generate enrollment code', function () {
     },
     level: 'EM',
     module: '1',
-    clazz: 'A',
+    classRoom: 'A',
   })
   const enrollmentRequest2 = makeStudentSut({
     student: {
@@ -119,7 +119,7 @@ test('Should generate enrollment code', function () {
     },
     level: 'EM',
     module: '1',
-    clazz: 'A',
+    classRoom: 'A',
   })
   expect(enrollStudent.execute(enrollmentRequest).code).toEqual('2021EM1A0001')
   expect(enrollStudent.execute(enrollmentRequest2).code).toEqual('2021EM1A0002')
@@ -134,7 +134,7 @@ test('Should not enroll student below minimum age', function () {
     },
     level: 'EM',
     module: '1',
-    clazz: 'A',
+    classRoom: 'A',
   })
   expect(() => enrollStudent.execute(enrollmentRequest)).toThrowError('Student below minimum age')
 })
@@ -148,7 +148,7 @@ test('Should not enroll student over class capacity', function () {
     },
     level: 'EM',
     module: '3',
-    clazz: 'A',
+    classRoom: 'A',
   })
   const enrollmentRequest2 = {
     ...enrollmentRequest,
@@ -196,7 +196,7 @@ test('Should not enroll after the end of the class', function () {
     },
     level: 'EM',
     module: '3',
-    clazz: 'A',
+    classRoom: 'A',
   })
   expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already finished')
 })
@@ -226,7 +226,7 @@ test('Should not enroll after 25% of the start of the class', function () {
     },
     level: 'EM',
     module: '1',
-    clazz: 'C',
+    classRoom: 'C',
   })
   expect(() => enrollStudentSut.execute(enrollmentRequest)).toThrowError('Class is already started')
 })
@@ -240,7 +240,7 @@ test('Should generate the invoices based on the number of installments, rounding
     },
     level: 'EM',
     module: '1',
-    clazz: 'A',
+    classRoom: 'A',
     installments: 3,
   })
   const price = 17000

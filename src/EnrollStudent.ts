@@ -1,4 +1,4 @@
-import ClassRepository from './ClassRepository'
+import ClassRoomRepository from './ClassRoomRepository'
 import Enrollment from './Enrollment'
 import EnrollmentRepository from './EnrollRepository'
 import LevelRepository from './LevelRepository'
@@ -24,12 +24,12 @@ export default class EnrollStudent {
   enrollmentRepository: EnrollmentRepository
   levelRepository: LevelRepository
   moduleRepository: ModuleRepository
-  classRepository: ClassRepository
+  classRepository: ClassRoomRepository
 
   constructor(
     levelRepository: LevelRepository,
     moduleRepository: ModuleRepository,
-    classRepository: ClassRepository,
+    classRepository: ClassRoomRepository,
     enrollmentRepository: EnrollmentRepository
   ) {
     this.enrollmentRepository = enrollmentRepository
@@ -50,10 +50,10 @@ export default class EnrollStudent {
     )
     const level = this.levelRepository.findByCode(enrollmentRequest.level)
     const module = this.moduleRepository.findByCode(enrollmentRequest.level, enrollmentRequest.module)
-    const clazz = this.classRepository.findByCode(enrollmentRequest.class)
+    const classRoom = this.classRepository.findByCode(enrollmentRequest.class)
 
-    if (this.classRepository.isClassFinished(clazz.code)) throw new Error('Class is already finished')
-    if (this.classRepository.isClassAlreadyStarted(clazz.code)) throw new Error('Class is already started')
+    if (this.classRepository.isClassFinished(classRoom.code)) throw new Error('Class is already finished')
+    if (this.classRepository.isClassAlreadyStarted(classRoom.code)) throw new Error('Class is already started')
 
     if (student.getAge() <= module.minimumAge) throw new Error('Student below minimum age')
     const studentsEnrolledInClass = this.enrollmentRepository.findAllByClass(
@@ -61,7 +61,7 @@ export default class EnrollStudent {
       enrollmentRequest.module,
       enrollmentRequest.class
     )
-    if (studentsEnrolledInClass.length >= clazz.capacity) throw new Error('Class is over capacity')
+    if (studentsEnrolledInClass.length >= classRoom.capacity) throw new Error('Class is over capacity')
 
     const existingEnrollment = this.enrollmentRepository.findByCpf(enrollmentRequest.student.cpf)
     if (existingEnrollment) throw new Error('Enrollment with duplicated student is not allowed')
@@ -71,7 +71,7 @@ export default class EnrollStudent {
       enrollmentRequest.class
     }${sequence}`
     const invoices = new Invoices(module.price, enrollmentRequest.installments)
-    const enrollment = new Enrollment(student, level.code, module.code, clazz.code, code, invoices.generate())
+    const enrollment = new Enrollment(student, level.code, module.code, classRoom.code, code, invoices.generate())
     this.enrollmentRepository.save(enrollment)
     return enrollment
   }

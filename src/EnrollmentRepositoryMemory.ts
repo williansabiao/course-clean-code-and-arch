@@ -11,9 +11,9 @@ export default class EnrollmentRepositoryMemory implements EnrollmentRepository 
   save(enrollment: Enrollment): void {
     this.enrollments.push(enrollment)
   }
-  findAllByClass(level: string, module: string, clazz: string) {
+  findAllByClass(level: string, module: string, classRoom: string) {
     return this.enrollments.filter(
-      (enrollment) => enrollment.level === level && enrollment.module === module && enrollment.clazz === clazz
+      (enrollment) => enrollment.level === level && enrollment.module === module && enrollment.classRoom === classRoom
     )
   }
   findByCpf(cpf: string) {
