@@ -1,5 +1,5 @@
 import Enrollment from './Enrollment'
-import EnrollmentRepository from './EnrollRepository'
+import EnrollmentRepository from './EnrollmentRepository'
 
 export default class EnrollmentRepositoryMemory implements EnrollmentRepository {
   enrollments: Enrollment[]
@@ -11,9 +11,10 @@ export default class EnrollmentRepositoryMemory implements EnrollmentRepository 
   save(enrollment: Enrollment): void {
     this.enrollments.push(enrollment)
   }
-  findAllByClass(level: string, module: string, classRoom: string) {
+  findAllByClass(level: string, module: string, classoom: string) {
     return this.enrollments.filter(
-      (enrollment) => enrollment.level === level && enrollment.module === module && enrollment.classRoom === classRoom
+      (enrollment) =>
+        enrollment.level.code === level && enrollment.module.code === module && enrollment.classroom.code === classoom
     )
   }
   findByCpf(cpf: string) {

@@ -1,40 +1,26 @@
-import ClassRoomRepository from './ClassRoomRepository'
 import Enrollment from './Enrollment'
-import EnrollmentRepository from './EnrollRepository'
+import EnrollmentRepository from './EnrollmentRepository'
 import LevelRepository from './LevelRepository'
 import ModuleRepository from './ModuleRepository'
-import Invoices from './Invoices'
+import Invoices from './Invoice'
 import Student from './Student/Student'
-
-type studentType = {
-  name: string
-  cpf: string
-  birthDate: string
-}
-
-export type enrollmentRequestType = {
-  student: studentType
-  level: string
-  module: string
-  class: string
-  installments: number
-}
-
+import ClassroomRepository from './ClassroomRepository'
+import Invoice from './Invoice'
 export default class EnrollStudent {
   enrollmentRepository: EnrollmentRepository
   levelRepository: LevelRepository
   moduleRepository: ModuleRepository
-  classRepository: ClassRoomRepository
+  classroomRepository: ClassroomRepository
 
   constructor(
     levelRepository: LevelRepository,
     moduleRepository: ModuleRepository,
-    classRepository: ClassRoomRepository,
+    classroomRepository: ClassroomRepository,
     enrollmentRepository: EnrollmentRepository
   ) {
     this.enrollmentRepository = enrollmentRepository
     this.levelRepository = levelRepository
-    this.classRepository = classRepository
+    this.classroomRepository = classroomRepository
     this.moduleRepository = moduleRepository
   }
 
@@ -42,7 +28,7 @@ export default class EnrollStudent {
     return timeInMs / 1000 / 60 / 60 / 24
   }
 
-  execute(enrollmentRequest: enrollmentRequestType): any {
+  execute(enrollmentRequest: any): any {
     const student = new Student(
       enrollmentRequest.student.name,
       enrollmentRequest.student.cpf,
@@ -50,28 +36,31 @@ export default class EnrollStudent {
     )
     const level = this.levelRepository.findByCode(enrollmentRequest.level)
     const module = this.moduleRepository.findByCode(enrollmentRequest.level, enrollmentRequest.module)
-    const classRoom = this.classRepository.findByCode(enrollmentRequest.class)
+    const classroom = this.classroomRepository.findByCode(enrollmentRequest.class)
 
-    if (this.classRepository.isClassFinished(classRoom.code)) throw new Error('Class is already finished')
-    if (this.classRepository.isClassAlreadyStarted(classRoom.code)) throw new Error('Class is already started')
-
-    if (student.getAge() <= module.minimumAge) throw new Error('Student below minimum age')
+    // por enquanto, não vejo ela dentro de uma entidade
     const studentsEnrolledInClass = this.enrollmentRepository.findAllByClass(
       enrollmentRequest.level,
       enrollmentRequest.module,
       enrollmentRequest.class
     )
-    if (studentsEnrolledInClass.length >= classRoom.capacity) throw new Error('Class is over capacity')
+    if (studentsEnrolledInClass.length === classroom.capacity) throw new Error('Class is over capacity')
 
+    // por enquanto, não vejo ela dentro de uma entidade
     const existingEnrollment = this.enrollmentRepository.findByCpf(enrollmentRequest.student.cpf)
     if (existingEnrollment) throw new Error('Enrollment with duplicated student is not allowed')
 
-    const sequence = `${this.enrollmentRepository.count() + 1}`.padStart(4, '0')
-    const code = `${new Date().getFullYear()}${enrollmentRequest.level}${enrollmentRequest.module}${
-      enrollmentRequest.class
-    }${sequence}`
-    const invoices = new Invoices(module.price, enrollmentRequest.installments)
-    const enrollment = new Enrollment(student, level.code, module.code, classRoom.code, code, invoices.generate())
+    const issueDate = new Date()
+    const enrollmentSequence = this.enrollmentRepository.count() + 1
+    const enrollment = new Enrollment(
+      student,
+      level,
+      module,
+      classroom,
+      issueDate,
+      enrollmentSequence,
+      enrollmentRequest.installments
+    )
     this.enrollmentRepository.save(enrollment)
     return enrollment
   }

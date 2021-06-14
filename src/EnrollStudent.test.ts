@@ -1,6 +1,7 @@
-import ClassRoomRepositoryMemory from './ClassRoomRepositoryMemory'
+import Classroom from './Classroom'
+import ClassroomRepositoryMemory from './ClassroomRepositoryMemory'
 import EnrollmentRepositoryMemory from './EnrollmentRepositoryMemory'
-import EnrollStudent, { enrollmentRequestType } from './EnrollStudent'
+import EnrollStudent from './EnrollStudent'
 import LevelRepositoryMemory from './LevelRepositoryMemory'
 import ModuleRepositoryMemory from './ModuleRepositoryMemory'
 
@@ -10,24 +11,17 @@ beforeEach(() => {
   const enrollmentRepository = new EnrollmentRepositoryMemory()
   const levelRepository = new LevelRepositoryMemory()
   const moduleRepository = new ModuleRepositoryMemory()
-  const classRepository = new ClassRoomRepositoryMemory()
+  const classRepository = new ClassroomRepositoryMemory()
   enrollStudent = new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
 })
 
-type enrollmentRequestSutType = {
-  student: enrollmentRequestType['student']
-  classRoom?: enrollmentRequestType['class']
-  level?: enrollmentRequestType['level']
-  module?: enrollmentRequestType['module']
-  class?: enrollmentRequestType['class']
-  installments?: enrollmentRequestType['installments']
-}
+type enrollmentRequestSutType = any
 
 const makeSut = (classes: any[]) => {
   const enrollmentRepository = new EnrollmentRepositoryMemory()
   const levelRepository = new LevelRepositoryMemory()
   const moduleRepository = new ModuleRepositoryMemory()
-  const classRepository = new ClassRoomRepositoryMemory(classes)
+  const classRepository = new ClassroomRepositoryMemory(classes)
   return new EnrollStudent(levelRepository, moduleRepository, classRepository, enrollmentRepository)
 }
 
@@ -121,8 +115,8 @@ test('Should generate enrollment code', function () {
     module: '1',
     classRoom: 'A',
   })
-  expect(enrollStudent.execute(enrollmentRequest).code).toEqual('2021EM1A0001')
-  expect(enrollStudent.execute(enrollmentRequest2).code).toEqual('2021EM1A0002')
+  expect(enrollStudent.execute(enrollmentRequest).code.value).toEqual('2021EM1A0001')
+  expect(enrollStudent.execute(enrollmentRequest2).code.value).toEqual('2021EM1A0002')
 })
 
 test('Should not enroll student below minimum age', function () {
@@ -179,14 +173,14 @@ test('Should not enroll student over class capacity', function () {
 
 test('Should not enroll after the end of the class', function () {
   const enrollStudentSut = makeSut([
-    {
+    new Classroom({
       level: 'EM',
       module: '3',
       code: 'A',
       capacity: 5,
-      start_date: '2020-06-01',
-      end_date: '2020-12-15',
-    },
+      startDate: new Date('2020-06-01'),
+      endDate: new Date('2020-12-15'),
+    }),
   ])
   const enrollmentRequest = makeStudentSut({
     student: {
@@ -202,20 +196,20 @@ test('Should not enroll after the end of the class', function () {
 })
 
 test('Should not enroll after 25% of the start of the class', function () {
-  const start_date = new Date()
-  const end_date = new Date()
-  start_date.setDate(start_date.getDate() - 25)
-  end_date.setDate(end_date.getDate() + 75)
+  const startDate = new Date()
+  const endDate = new Date()
+  startDate.setDate(startDate.getDate() - 25)
+  endDate.setDate(endDate.getDate() + 75)
 
   const enrollStudentSut = makeSut([
-    {
+    new Classroom({
       level: 'EM',
       module: '1',
       code: 'C',
       capacity: 5,
-      start_date: start_date.toISOString().substring(0, 10),
-      end_date: end_date.toISOString().substring(0, 10),
-    },
+      startDate: new Date(startDate.toISOString().substring(0, 10)),
+      endDate: new Date(endDate.toISOString().substring(0, 10)),
+    }),
   ])
 
   const enrollmentRequest = makeStudentSut({
@@ -241,15 +235,15 @@ test('Should generate the invoices based on the number of installments, rounding
     level: 'EM',
     module: '1',
     classRoom: 'A',
-    installments: 3,
+    installments: 12,
   })
   const price = 17000
-  const priceByMonth = parseFloat((price / 3).toFixed(2))
-  const priceLastMonth = price - priceByMonth * 2
+  const months = 12
+  const { invoices } = enrollStudent.execute(enrollmentRequest)
+  const totalPrice = invoices.reduce((acc: number, invoice: any) => acc + invoice.amount, 0)
 
-  expect(enrollStudent.execute(enrollmentRequest).invoices).toMatchObject([
-    { value: priceByMonth },
-    { value: priceByMonth },
-    { value: priceLastMonth },
-  ])
+  expect(invoices).toHaveLength(months)
+  expect(totalPrice).toBe(price)
+  expect(invoices[0].amount).toBe(1416.66)
+  expect(invoices[months - 1].amount).toBe(1416.73)
 })
