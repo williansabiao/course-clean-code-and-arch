@@ -1,5 +1,5 @@
-export default interface ClassRoomRepository {
-  findByCode(code: string): any
-  isClassFinished(code: string): any
-  isClassAlreadyStarted(code: string): any
+import Classroom from './Classroom'
+
+export default interface ClassroomRepository {
+  findByCode(code: string): Classroom
 }
