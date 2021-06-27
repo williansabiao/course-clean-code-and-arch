@@ -2,26 +2,20 @@ import Enrollment from './Enrollment'
 import EnrollmentRepository from './EnrollmentRepository'
 import LevelRepository from './LevelRepository'
 import ModuleRepository from './ModuleRepository'
-import Invoices from './Invoice'
 import Student from './Student/Student'
 import ClassroomRepository from './ClassroomRepository'
-import Invoice from './Invoice'
+import RepositoryAbstractFactory from './RepositoryAbsctractFactory'
 export default class EnrollStudent {
   enrollmentRepository: EnrollmentRepository
   levelRepository: LevelRepository
   moduleRepository: ModuleRepository
   classroomRepository: ClassroomRepository
 
-  constructor(
-    levelRepository: LevelRepository,
-    moduleRepository: ModuleRepository,
-    classroomRepository: ClassroomRepository,
-    enrollmentRepository: EnrollmentRepository
-  ) {
-    this.enrollmentRepository = enrollmentRepository
-    this.levelRepository = levelRepository
-    this.classroomRepository = classroomRepository
-    this.moduleRepository = moduleRepository
+  constructor(repositoryFactory: RepositoryAbstractFactory, classes?: any) {
+    this.enrollmentRepository = repositoryFactory.createEnrollmentRepository()
+    this.levelRepository = repositoryFactory.createLevelRespository()
+    this.classroomRepository = repositoryFactory.createClassroomRepository(classes)
+    this.moduleRepository = repositoryFactory.createModuleRepository()
   }
 
   convertMsToDay(timeInMs: number) {
