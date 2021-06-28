@@ -13,10 +13,10 @@ export default class EnrollStudent {
   moduleRepository: ModuleRepository
   classroomRepository: ClassroomRepository
 
-  constructor(repositoryFactory: RepositoryAbstractFactory, classes?: any) {
+  constructor(repositoryFactory: RepositoryAbstractFactory) {
     this.enrollmentRepository = repositoryFactory.createEnrollmentRepository()
     this.levelRepository = repositoryFactory.createLevelRespository()
-    this.classroomRepository = repositoryFactory.createClassroomRepository(classes)
+    this.classroomRepository = repositoryFactory.createClassroomRepository()
     this.moduleRepository = repositoryFactory.createModuleRepository()
   }
 

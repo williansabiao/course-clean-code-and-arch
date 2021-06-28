@@ -4,8 +4,8 @@ import classroomRepository from './ClassroomRepository'
 export default class ClassroomRepositoryMemory implements classroomRepository {
   classes: Classroom[]
 
-  constructor(classes?: any[]) {
-    this.classes = classes || [
+  constructor() {
+    this.classes = [
       new Classroom({
         level: 'EM',
         module: '3',
@@ -17,10 +17,18 @@ export default class ClassroomRepositoryMemory implements classroomRepository {
       new Classroom({
         level: 'EM',
         module: '1',
-        code: 'A',
+        code: 'B',
         capacity: 10,
         startDate: new Date('2021-06-01'),
-        endDate: new Date('2021-12-15'),
+        endDate: new Date('2021-06-20'),
+      }),
+      new Classroom({
+        level: 'EM',
+        module: '3',
+        code: 'C',
+        capacity: 5,
+        startDate: new Date('2021-05-01'),
+        endDate: new Date('2021-06-30'),
       }),
     ]
   }

@@ -6,6 +6,6 @@ import ModuleRepository from './ModuleRepository'
 export default interface RepositoryAbsctractFactory {
   createLevelRespository(): LevelRepository
   createModuleRepository(): ModuleRepository
-  createClassroomRepository(classes?: any): ClassroomRepository
+  createClassroomRepository(): ClassroomRepository
   createEnrollmentRepository(): EnrollmentRepository
 }
