@@ -5,6 +5,8 @@ import ModuleRepository from './ModuleRepository'
 import Student from './Student/Student'
 import ClassroomRepository from './ClassroomRepository'
 import RepositoryAbstractFactory from './RepositoryAbsctractFactory'
+import EnrollStudentInputData from './EnrollStudentInputData'
+import EnrollStudentOutputData from './EnrollStudentOutputData'
 export default class EnrollStudent {
   enrollmentRepository: EnrollmentRepository
   levelRepository: LevelRepository
@@ -22,26 +24,26 @@ export default class EnrollStudent {
     return timeInMs / 1000 / 60 / 60 / 24
   }
 
-  execute(enrollmentRequest: any): any {
+  execute(enrollmentStudentInputData: EnrollStudentInputData): EnrollStudentOutputData {
     const student = new Student(
-      enrollmentRequest.student.name,
-      enrollmentRequest.student.cpf,
-      enrollmentRequest.student.birthDate
+      enrollmentStudentInputData.studentName,
+      enrollmentStudentInputData.studentCpf,
+      enrollmentStudentInputData.studentBirthDate
     )
-    const level = this.levelRepository.findByCode(enrollmentRequest.level)
-    const module = this.moduleRepository.findByCode(enrollmentRequest.level, enrollmentRequest.module)
-    const classroom = this.classroomRepository.findByCode(enrollmentRequest.class)
+    const level = this.levelRepository.findByCode(enrollmentStudentInputData.level)
+    const module = this.moduleRepository.findByCode(enrollmentStudentInputData.level, enrollmentStudentInputData.module)
+    const classroom = this.classroomRepository.findByCode(enrollmentStudentInputData.classroom)
 
     // por enquanto, não vejo ela dentro de uma entidade
     const studentsEnrolledInClass = this.enrollmentRepository.findAllByClass(
-      enrollmentRequest.level,
-      enrollmentRequest.module,
-      enrollmentRequest.class
+      enrollmentStudentInputData.level,
+      enrollmentStudentInputData.module,
+      enrollmentStudentInputData.classroom
     )
     if (studentsEnrolledInClass.length === classroom.capacity) throw new Error('Class is over capacity')
 
     // por enquanto, não vejo ela dentro de uma entidade
-    const existingEnrollment = this.enrollmentRepository.findByCpf(enrollmentRequest.student.cpf)
+    const existingEnrollment = this.enrollmentRepository.findByCpf(enrollmentStudentInputData.studentCpf)
     if (existingEnrollment) throw new Error('Enrollment with duplicated student is not allowed')
 
     const issueDate = new Date()
@@ -53,9 +55,16 @@ export default class EnrollStudent {
       classroom,
       issueDate,
       enrollmentSequence,
-      enrollmentRequest.installments
+      enrollmentStudentInputData.installments
     )
     this.enrollmentRepository.save(enrollment)
-    return enrollment
+    const enrollStudentOutputData = new EnrollStudentOutputData({
+      code: enrollment.code.value,
+      // invoices: enrollment.invoices,
+    })
+    for (const invoice of enrollment.invoices) {
+      enrollStudentOutputData.invoices.push(invoice.clone())
+    }
+    return enrollStudentOutputData
   }
 }
