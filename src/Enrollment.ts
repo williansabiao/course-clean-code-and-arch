@@ -1,6 +1,7 @@
 import Classroom from './Classroom'
 import EnrollmentCode from './EnrollmentCode'
 import Invoice from './Invoice'
+import InvoiceEvent from './InvoiceEvent'
 import Level from './Level'
 import Module from './Module'
 import Student from './Student/Student'
@@ -52,6 +53,15 @@ export default class Enrollment {
     this.invoices[this.installments - 1].amount = installmentAmount + rest
   }
   getInvoiceBalance() {
-    return this.invoices.reduce((total, invoice) => total + invoice.amount, 0)
+    return this.invoices.reduce((total, invoice) => total + invoice.getBalance(), 0)
+  }
+  getInvoice(month: number, year: number): Invoice | undefined {
+    const invoice = this.invoices.find((invoice) => invoice.month === month && invoice.year === year)
+    return invoice
+  }
+  payInvoice(month: number, year: number, amount: number) {
+    const invoice = this.getInvoice(month, year)
+    if (!invoice) throw new Error('Invalid invoice')
+    invoice.addEvent(new InvoiceEvent('payment', amount))
   }
 }
