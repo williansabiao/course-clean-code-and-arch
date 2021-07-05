@@ -1,6 +1,8 @@
 import Classroom from './Classroom'
+import EnrollmentRepositoryMemory from './EnrollmentRepositoryMemory'
 import EnrollStudent from './EnrollStudent'
 import EnrollStudentInputData from './EnrollStudentInputData'
+import GetEnrollment from './GetEnrollment'
 import RepositoryMemoryFactory from './RepositoryMemoryFactory'
 
 let enrollStudent: EnrollStudent

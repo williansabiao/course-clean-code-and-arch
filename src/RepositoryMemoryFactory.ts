@@ -1,20 +1,23 @@
 import ClassroomRepositoryMemory from './ClassroomRepositoryMemory'
-import EnrollmentRepositoryMemory from './EnrollmentRepositoryMemory'
+import EnrollmentRepositoryMemorySingleton from './EnrollmentRepositoryMemorySingleton'
 import LevelRepositoryMemory from './LevelRepositoryMemory'
 import ModuleRepositoryMemory from './ModuleRepositoryMemory'
 import RepositoryAbsctractFactory from './RepositoryAbsctractFactory'
 
 export default class RepositoryMemoryFactory implements RepositoryAbsctractFactory {
+  constructor() {
+    EnrollmentRepositoryMemorySingleton.destroy()
+  }
   createLevelRespository() {
     return new LevelRepositoryMemory()
   }
   createModuleRepository() {
     return new ModuleRepositoryMemory()
   }
-  createClassroomRepository(classes?: any) {
-    return new ClassroomRepositoryMemory(classes)
+  createClassroomRepository() {
+    return new ClassroomRepositoryMemory()
   }
   createEnrollmentRepository() {
-    return new EnrollmentRepositoryMemory()
+    return EnrollmentRepositoryMemorySingleton.getInstance()
   }
 }

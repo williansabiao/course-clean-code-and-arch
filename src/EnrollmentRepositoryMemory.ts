@@ -20,6 +20,9 @@ export default class EnrollmentRepositoryMemory implements EnrollmentRepository 
   findByCpf(cpf: string) {
     return this.enrollments.find((enrollment) => enrollment.student.cpf.value === cpf)
   }
+  get(code: string) {
+    return this.enrollments.find((enrollment) => enrollment.code.value === code)
+  }
   count(): number {
     return this.enrollments.length
   }

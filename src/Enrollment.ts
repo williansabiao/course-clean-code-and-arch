@@ -51,4 +51,7 @@ export default class Enrollment {
     const rest = Math.trunc((this.module.price - total) * 100) / 100
     this.invoices[this.installments - 1].amount = installmentAmount + rest
   }
+  getInvoiceBalance() {
+    return this.invoices.reduce((total, invoice) => total + invoice.amount, 0)
+  }
 }
